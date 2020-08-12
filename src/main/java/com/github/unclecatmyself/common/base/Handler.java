@@ -2,11 +2,14 @@ package com.github.unclecatmyself.common.base;
 
 import com.github.unclecatmyself.common.constant.LogConstant;
 import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +20,9 @@ import org.slf4j.LoggerFactory;
 public abstract class Handler extends SimpleChannelInboundHandler<Object> {
 
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
+
+    private AttributeKey<String> key = AttributeKey.valueOf("Id");
+
 
     HandlerApi handlerApi;
 
@@ -48,6 +54,13 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.info(LogConstant.CHANNELINACTIVE+ctx.channel().localAddress().toString()+LogConstant.CLOSE_SUCCESS);
         try {
+            Channel channel = ctx.channel();
+            Attribute<String> attr = channel.attr(key);
+            if (attr != null) {
+                String id = attr.get();
+                //移除id相关的记录，移除channel
+            }
+            System.out.println("channelIdText:"+channel.id().asShortText());
             handlerApi.close(ctx.channel());
         }catch (NotFindLoginChannlException e){
             log.error(LogConstant.NOTFINDLOGINCHANNLEXCEPTION);
