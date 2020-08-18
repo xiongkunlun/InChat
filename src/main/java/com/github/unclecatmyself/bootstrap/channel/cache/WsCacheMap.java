@@ -2,13 +2,16 @@ package com.github.unclecatmyself.bootstrap.channel.cache;
 
 import com.github.unclecatmyself.auto.AutoConfig;
 import com.github.unclecatmyself.auto.ConfigFactory;
-import com.github.unclecatmyself.auto.RedisConfig;
 import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
 import com.github.unclecatmyself.common.utils.RedisUtil;
 import io.netty.channel.Channel;
-import redis.clients.jedis.Jedis;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,24 +35,28 @@ public class WsCacheMap {
     /**
      * Redis连接实例
      */
-    private final static Jedis jedis = RedisConfig.jedis;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 是否启动分布式
      */
-    private final static Boolean isDistributed = ConfigFactory.initNetty.getDistributed();
+//    private final static Boolean isDistributed = ConfigFactory.initNetty.getDistributed();
+    private final static Boolean isDistributed = false;
 
     private final static String address = AutoConfig.address;
 
     /**
      * 存储链接
-     * @param token {@link String} 用户标签
+     *
+     * @param token   {@link String} 用户标签
      * @param channel {@link Channel} 链接实例
      */
-    public static void saveWs(String token,Channel channel){
-        maps.put(token,channel);
-        if (isDistributed){
-            jedis.set(token, RedisUtil.convertMD5(address,token));
+    public void saveWs(String token, Channel channel) {
+        maps.put(token, channel);
+        if (isDistributed) {
+            ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
+            stringStringValueOperations.set(token, RedisUtil.convertMD5(address, token));
         }
     }
 
@@ -88,15 +95,16 @@ public class WsCacheMap {
 
     /**
      * 删除链接数据
+     *
      * @param token {@link String} 用户标识
      */
-    public static void deleteWs(String token){
+    public void deleteWs(String token) {
         try {
             maps.remove(token);
-            if (isDistributed){
-                jedis.del(token);
+            if (isDistributed) {
+                stringRedisTemplate.delete(token);
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             throw new NotFindLoginChannlException(NotInChatConstant.Not_Login);
         }
     }
@@ -114,37 +122,43 @@ public class WsCacheMap {
      * @return {@link Integer} 链接数
      */
     public static Integer getSize(){
-        if (isDistributed){
-            return jedis.keys("*").size();
+        if (isDistributed) {
+            return 1;
+//            return jedis.keys("*").size();
         }
         return maps.size();
     }
 
     /**
      * 判断是否存在链接账号
+     *
      * @param token {@link String} 用户标识
      * @return {@link Boolean} 是否存在
      */
-    public static boolean hasToken(String token){
-        if (isDistributed){
-            return jedis.exists(token);
+    public boolean hasToken(String token) {
+        if (isDistributed) {
+            ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
+            return stringRedisTemplate.hasKey(token);
         }
         return maps.containsKey(token);
     }
 
     /**
      * 获取在线用户标签列表
+     *
      * @return {@link Set} 标识列表
      */
-    public static Set<String> getTokenList(){
-        if (isDistributed){
-            return jedis.keys("*");
+    public Set<String> getTokenList() {
+        if (isDistributed) {
+            return new HashSet<>();
+//            return jedis.keys("*");
         }
         Set keys = maps.keySet();
         return keys;
     }
 
-    public static String getByJedis(String token) {
-        return jedis.get(token);
+    public String getByJedis(String token) {
+        ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
+        return stringStringValueOperations.get(token);
     }
 }

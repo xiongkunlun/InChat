@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.github.unclecatmyself.bootstrap.channel.cache.WsCacheMap;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
@@ -13,16 +14,18 @@ import java.util.Map;
 public class WebSocketChannelService implements WsChannelService {
 
 
+    @Autowired
+    WsCacheMap wsCacheMap;
 
     @Override
     public void loginWsSuccess(Channel channel, String token) {
-        WsCacheMap.saveWs(token,channel);
-        WsCacheMap.saveAd(channel.remoteAddress().toString(),token);
+        wsCacheMap.saveWs(token, channel);
+        WsCacheMap.saveAd(channel.remoteAddress().toString(), token);
     }
 
     @Override
     public boolean hasOther(String otherOne) {
-        return WsCacheMap.hasToken(otherOne);
+        return wsCacheMap.hasToken(otherOne);
     }
 
     @Override
@@ -34,7 +37,7 @@ public class WebSocketChannelService implements WsChannelService {
     public void close(Channel channel) {
         String token = WsCacheMap.getByAddress(channel.remoteAddress().toString());
         WsCacheMap.deleteAd(channel.remoteAddress().toString());
-        WsCacheMap.deleteWs(token);
+        wsCacheMap.deleteWs(token);
         channel.close();
     }
 

@@ -24,6 +24,7 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
     private AttributeKey<String> key = AttributeKey.valueOf("Id");
 
 
+
     HandlerApi handlerApi;
 
     public Handler(HandlerApi handlerApi){
@@ -58,9 +59,12 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
             Attribute<String> attr = channel.attr(key);
             if (attr != null) {
                 String id = attr.get();
+
                 //移除id相关的记录，移除channel
             }
-            System.out.println("channelIdText:"+channel.id().asShortText());
+            System.out.println("channelIdText:" + channel.toString());  //a754ebc1
+            System.out.println("longstr" + channel.id().asLongText()); //60位长度 例如1c1b0dfffea99bb0-00003108-00000001-e1e893ada698884f-9dabc410
+
             handlerApi.close(ctx.channel());
         }catch (NotFindLoginChannlException e){
             log.error(LogConstant.NOTFINDLOGINCHANNLEXCEPTION);

@@ -10,6 +10,7 @@ import com.github.unclecatmyself.common.constant.HttpConstant;
 import com.github.unclecatmyself.common.constant.LogConstant;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
 import com.github.unclecatmyself.common.exception.NoFindHandlerException;
+import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import com.github.unclecatmyself.common.utils.HttpUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -18,8 +19,11 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
@@ -106,16 +110,19 @@ public class DefaultHandler extends Handler {
         }
         Map<String,Object> maps = (Map) JSON.parse(msg.text());
         maps.put(Constans.TIME, new Date());
-        switch ((String)maps.get(Constans.TYPE)){
+        switch ((String)maps.get(Constans.TYPE)) {
             case Constans.LOGIN:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_LOGIN);
-                handlerService.login(channel,maps);
+                handlerService.login(channel, maps);
+                AttributeKey<String> token = AttributeKey.valueOf("token");
+                Attribute<String> attr = ctx.channel().attr(token);
+                attr.set((String) maps.get("token"));
                 break;
             //针对个人，发送给自己
             case Constans.SENDME:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_SENDME);
-                handlerService.verify(channel,maps);
-                handlerService.sendMeText(channel,maps);
+                handlerService.verify(channel, maps);
+                handlerService.sendMeText(channel, maps);
                 break;
             //针对个人，发送给某人
             case Constans.SENDTO:

@@ -19,6 +19,9 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -27,18 +30,25 @@ import java.util.Map;
 /**
  * Create by UncleCatMySelf in 11:41 2018\12\31 0031
  */
+@Service
 public class HttpChannelServiceImpl implements HttpChannelService {
 
     private static final Logger log = LoggerFactory.getLogger(HttpChannelServiceImpl.class);
 
     private static FromServerService fromServerService = ConfigFactory.fromServerService;
 
+    @Autowired
+    private WsCacheMap wsCacheMap;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     @Override
     public void getSize(Channel channel) {
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-        response.headers().set(HttpConstant.CONTENT_TYPE,HttpConstant.APPLICATION_JSON);
-        GetSizeVO getSizeVO = new GetSizeVO(WsCacheMap.getSize(),new Date());
-        ResultVO<GetSizeVO> resultVO = new ResultVO<>(HttpResponseStatus.OK.code(),getSizeVO);
+        response.headers().set(HttpConstant.CONTENT_TYPE, HttpConstant.APPLICATION_JSON);
+        GetSizeVO getSizeVO = new GetSizeVO(WsCacheMap.getSize(), new Date());
+        ResultVO<GetSizeVO> resultVO = new ResultVO<>(HttpResponseStatus.OK.code(), getSizeVO);
         Gson gson = new Gson();
         ByteBuf buf = Unpooled.copiedBuffer(gson.toJson(resultVO), CharsetUtil.UTF_8);
         response.content().writeBytes(buf);
@@ -97,8 +107,8 @@ public class HttpChannelServiceImpl implements HttpChannelService {
     public void getList(Channel channel) {
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         response.headers().set(HttpConstant.CONTENT_TYPE,HttpConstant.APPLICATION_JSON);
-        GetListVO getListVO = new GetListVO(WsCacheMap.getTokenList());
-        ResultVO<GetListVO> resultVO = new ResultVO<>(HttpResponseStatus.OK.code(),getListVO);
+        GetListVO getListVO = new GetListVO(wsCacheMap.getTokenList());
+        ResultVO<GetListVO> resultVO = new ResultVO<>(HttpResponseStatus.OK.code(), getListVO);
         Gson gson = new Gson();
         ByteBuf buf = Unpooled.copiedBuffer(gson.toJson(resultVO), CharsetUtil.UTF_8);
         response.content().writeBytes(buf);
@@ -108,7 +118,7 @@ public class HttpChannelServiceImpl implements HttpChannelService {
 
     @Override
     public void sendInChat(String token, Map msg) {
-        String address = RedisUtil.getAddress(RedisUtil.convertMD5(WsCacheMap.getByJedis(token)));
+        String address = RedisUtil.getAddress(RedisUtil.convertMD5(wsCacheMap.getByJedis(token)));
         String[] str = address.split(":");
         try {
             HttpClient.getInstance().send(str[0],Integer.parseInt(str[1]),token,msg);
