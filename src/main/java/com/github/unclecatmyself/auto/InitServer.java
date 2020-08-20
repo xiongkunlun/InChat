@@ -4,6 +4,7 @@ package com.github.unclecatmyself.auto;
 import com.github.unclecatmyself.bootstrap.BootstrapServer;
 import com.github.unclecatmyself.bootstrap.NettyBootstrapServer;
 import com.github.unclecatmyself.common.bean.InitNetty;
+import com.github.unclecatmyself.common.utils.SpringContextUtils;
 
 /**
  * InChat项目启动服务
@@ -28,8 +29,9 @@ public abstract class InitServer {
      * 主要还是这个{@link NettyBootstrapServer},实例化想要的netty配置服务
      */
     public static void open(){
-        if(serverBean!=null){
-            bootstrapServer = new NettyBootstrapServer();
+        if(serverBean!=null) {
+//            bootstrapServer = new NettyBootstrapServer();
+            bootstrapServer = SpringContextUtils.getBean(NettyBootstrapServer.class);
             bootstrapServer.setServerBean(serverBean);
             bootstrapServer.start();
         }

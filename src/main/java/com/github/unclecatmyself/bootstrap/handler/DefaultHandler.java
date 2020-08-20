@@ -42,7 +42,6 @@ public class DefaultHandler extends Handler {
 
     private final Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
-    @Autowired
     private HandlerApi handlerApi;
 
     public DefaultHandler(HandlerApi handlerApi) {

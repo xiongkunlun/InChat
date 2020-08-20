@@ -1,9 +1,11 @@
 package com.github.unclecatmyself.bootstrap;
 
 import com.github.unclecatmyself.auto.AutoConfig;
+import com.github.unclecatmyself.common.base.HandlerApi;
 import com.github.unclecatmyself.common.ip.IpUtils;
 import com.github.unclecatmyself.common.bean.InitNetty;
 import com.github.unclecatmyself.common.utils.RemotingUtil;
+import com.github.unclecatmyself.common.utils.SpringContextUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelFutureListener;
@@ -18,6 +20,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Create by UncleCatMySelf in 2018/12/06
  **/
+@Component
 public class NettyBootstrapServer extends AbstractBootstrapServer {
+
+    @Autowired
+    HandlerApi handlerApi;
 
     private final Logger log = LoggerFactory.getLogger(NettyBootstrapServer.class);
 
@@ -45,6 +53,7 @@ public class NettyBootstrapServer extends AbstractBootstrapServer {
      * 服务开启
      */
     public void start() {
+        HandlerApi bean = SpringContextUtils.getBean(HandlerApi.class);
         initEventPool();
         bootstrap.group(bossGroup, workGroup)
                 .channel(useEpoll()?EpollServerSocketChannel.class:NioServerSocketChannel.class)
@@ -54,7 +63,7 @@ public class NettyBootstrapServer extends AbstractBootstrapServer {
                 .option(ChannelOption.SO_RCVBUF, serverBean.getRevbuf())
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        initHandler(ch.pipeline(),serverBean);
+                        initHandler(ch.pipeline(), serverBean, handlerApi);
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, serverBean.isNodelay())

@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 /**
  * Create by UncleCatMySelf in 2018/12/06
  **/
-@Component
 
 public abstract class AbstractBootstrapServer implements BootstrapServer {
 
@@ -47,16 +46,16 @@ public abstract class AbstractBootstrapServer implements BootstrapServer {
     private   SSLContext SERVER_CONTEXT;
 
     /**
-     * @param channelPipeline  channelPipeline
-     * @param serverBean  服务配置参数
+     * @param channelPipeline channelPipeline
+     * @param serverBean      服务配置参数
      */
-    protected  void initHandler(ChannelPipeline channelPipeline, InitNetty serverBean){
-        if (serverBean.isSsl()){
-            if (!ObjectUtils.allNotNull(serverBean.getJksCertificatePassword(),serverBean.getJksFile(),serverBean.getJksStorePassword())){
+    protected void initHandler(ChannelPipeline channelPipeline, InitNetty serverBean, HandlerApi handlerApi) {
+        if (serverBean.isSsl()) {
+            if (!ObjectUtils.allNotNull(serverBean.getJksCertificatePassword(), serverBean.getJksFile(), serverBean.getJksStorePassword())) {
                 throw new NullPointerException(NotInChatConstant.SSL_NOT_FIND);
             }
             try {
-                SSLContext context = SslUtil.createSSLContext("JKS",serverBean.getJksFile(),serverBean.getJksStorePassword());
+                SSLContext context = SslUtil.createSSLContext("JKS", serverBean.getJksFile(), serverBean.getJksStorePassword());
                 SSLEngine engine = context.createSSLEngine();
                 engine.setUseClientMode(false);
                 engine.setNeedClientAuth(false);
@@ -70,7 +69,7 @@ public abstract class AbstractBootstrapServer implements BootstrapServer {
         channelPipeline.addLast(new IdleStateHandler(serverBean.getHeart(), 0, 0));
         //原来是手动new，现在做成自动注入，部分属性先写死
 //        channelPipeline.addLast(new DefaultHandler(new HandlerServiceImpl(new DataAsynchronousTask(ConfigFactory.inChatToDataBaseService),ConfigFactory.inChatVerifyService,ConfigFactory.textData)));
-        channelPipeline.addLast(new DefaultHandler());
+        channelPipeline.addLast(new DefaultHandler(handlerApi));
 
     }
 
