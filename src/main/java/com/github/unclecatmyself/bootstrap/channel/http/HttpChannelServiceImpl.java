@@ -8,8 +8,8 @@ import com.github.unclecatmyself.common.bean.vo.*;
 import com.github.unclecatmyself.common.constant.HttpConstant;
 import com.github.unclecatmyself.common.constant.LogConstant;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
-import com.github.unclecatmyself.common.utils.HttpUtil;
 import com.github.unclecatmyself.common.utils.RedisUtil;
+import com.github.unclecatmyself.users.FromServerServiceImpl;
 import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ public class HttpChannelServiceImpl implements HttpChannelService {
 
     private static final Logger log = LoggerFactory.getLogger(HttpChannelServiceImpl.class);
 
-    private static FromServerService fromServerService = ConfigFactory.fromServerService;
+    private static FromServerService fromServerService = FromServerServiceImpl.TYPE2;
 
     @Autowired
     private WsCacheMap wsCacheMap;
@@ -61,7 +60,7 @@ public class HttpChannelServiceImpl implements HttpChannelService {
         if (serverVO.getToken() == ""){
             notFindUri(channel);
         }
-        Channel userChannel = WsCacheMap.getByToken(serverVO.getToken());
+        Channel userChannel = WsCacheMap.getByUserId(serverVO.getToken());
         if (userChannel == null){
             log.info(LogConstant.HTTPCHANNELSERVICEIMPL_NOTFINDLOGIN);
             notFindToken(channel);
@@ -130,7 +129,7 @@ public class HttpChannelServiceImpl implements HttpChannelService {
     @Override
     public void sendByInChat(Channel channel, SendInChat sendInChat) {
         Gson gson = new Gson();
-        Channel other = WsCacheMap.getByToken(sendInChat.getToken());
+        Channel other = WsCacheMap.getByUserId(sendInChat.getToken());
         try {
             other.writeAndFlush(new TextWebSocketFrame(gson.toJson(sendInChat.getFrame())));
         }catch (NullPointerException e){

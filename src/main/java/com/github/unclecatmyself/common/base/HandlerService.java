@@ -1,5 +1,6 @@
 package com.github.unclecatmyself.common.base;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.unclecatmyself.common.bean.vo.SendServerVO;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpMessage;
@@ -45,11 +46,12 @@ public abstract class HandlerService implements HandlerApi {
 
     /**
      * 登录类型
+     *
      * @param channel {@link Channel} 链接实例
-     * @param map {@link Map} 数据信息
+     * @param map     {@link Map} 数据信息
      * @return {@link Boolean} 成功失败
      */
-    public abstract boolean login(Channel channel, Map<String,Object> map);
+    public abstract boolean login(Channel channel, JSONObject map);
 
     /**
      * 发送给自己
@@ -67,17 +69,18 @@ public abstract class HandlerService implements HandlerApi {
 
     /**
      * 发送给群聊
+     *
      * @param channel {@link Channel} 链接实例
-     * @param maps {@link Map} 数据信息
+     * @param maps    {@link Map} 数据信息
      */
-    public abstract void sendGroupText(Channel channel, Map<String, Object> maps);
+    public abstract void sendGroupText(Channel channel, JSONObject maps);
 
     /**
      * 登录校验
+     *
      * @param channel {@link Channel} 链接实例
-     * @param maps {@link Map} 数据信息
      */
-    public abstract void verify(Channel channel, Map<String, Object> maps);
+    public abstract void verify(Channel channel);
 
     /**
      * 发送图片给个人

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * WebSocket链接实例本地存储
  * Created by MySelf on 2018/11/26.
  */
+@Component
 public class WsCacheMap {
 
     /**
@@ -49,39 +51,39 @@ public class WsCacheMap {
     /**
      * 存储链接
      *
-     * @param token   {@link String} 用户标签
+     * @param userId  {@link String} 用户id
      * @param channel {@link Channel} 链接实例
      */
-    public void saveWs(String token, Channel channel) {
-        maps.put(token, channel);
+    public void saveWs(String userId, Channel channel) {
+        maps.put(userId, channel);
         if (isDistributed) {
             ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
-            stringStringValueOperations.set(token, RedisUtil.convertMD5(address, token));
+            stringStringValueOperations.set(userId, RedisUtil.convertMD5(address, userId));
         }
     }
 
     /**
      * 存储登录信息
      * @param address 登录地址
-     * @param token 用户标签
+     * @param userId 用户标签
      */
-    public static void saveAd(String address,String token){
-        addMaps.put(address, token);
+    public static void saveAd(String address, String userId) {
+        addMaps.put(address, userId);
     }
 
     /**
      * 获取链接数据
-     * @param token {@link String} 用户标识
+     * @param userId {@link String} 用户标识
      * @return {@link Channel} 链接实例
      */
-    public static Channel getByToken(String token){
-        if (isDistributed){
-           if (!maps.containsKey(token)){
-               //转分布式发送
-               return null;
-           }
+    public static Channel getByUserId(String userId) {
+        if (isDistributed) {
+            if (!maps.containsKey(userId)) {
+                //转分布式发送
+                return null;
+            }
         }
-        return maps.get(token);
+        return maps.get(userId);
     }
 
     /**

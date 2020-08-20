@@ -5,12 +5,14 @@ import com.github.unclecatmyself.bootstrap.channel.cache.WsCacheMap;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
 /**
  * Created by MySelf on 2018/11/26.
  */
+@Service
 public class WebSocketChannelService implements WsChannelService {
 
 
@@ -18,9 +20,9 @@ public class WebSocketChannelService implements WsChannelService {
     WsCacheMap wsCacheMap;
 
     @Override
-    public void loginWsSuccess(Channel channel, String token) {
-        wsCacheMap.saveWs(token, channel);
-        WsCacheMap.saveAd(channel.remoteAddress().toString(), token);
+    public void loginWsSuccess(Channel channel, String userId) {
+        wsCacheMap.saveWs(userId, channel);
+        WsCacheMap.saveAd(channel.remoteAddress().toString(), userId);
     }
 
     @Override
@@ -29,8 +31,8 @@ public class WebSocketChannelService implements WsChannelService {
     }
 
     @Override
-    public Channel getChannel(String otherOne) {
-        return WsCacheMap.getByToken(otherOne);
+    public Channel getChannel(String otherUserId) {
+        return WsCacheMap.getByUserId(otherUserId);
     }
 
     @Override

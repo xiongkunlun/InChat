@@ -1,6 +1,9 @@
 package com.github.unclecatmyself.bootstrap.verify;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+import java.util.Set;
 
 /**
  * 用户校验层
@@ -8,8 +11,9 @@ import com.alibaba.fastjson.JSONArray;
  */
 public interface InChatVerifyService {
 
-    boolean verifyToken(String token);
+    Boolean verifyToken(String token);
 
-    JSONArray getArrayByGroupId(String groupId);
+    Set<String> getAllUserIdByGroupId(String groupId);
 
+    boolean verifyGroup(JSONObject userId);
 }

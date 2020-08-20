@@ -12,6 +12,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Netty实现初始层
@@ -23,9 +24,7 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
 
     private AttributeKey<String> key = AttributeKey.valueOf("Id");
 
-
-
-    HandlerApi handlerApi;
+    public HandlerApi handlerApi;
 
     public Handler(HandlerApi handlerApi){
         this.handlerApi = handlerApi;

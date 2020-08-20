@@ -7,6 +7,7 @@ import com.github.unclecatmyself.users.repository.TestRepository;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,8 @@ import java.util.Map;
 /**
  * Created by MySelf on 2019/8/20.
  */
+@Component
+@DependsOn("springContextUtils")
 public class UserTextData extends TextData {
 
     private TestRepository repository = (TestRepository) SpringContextUtils.getBean(TestRepository.class);
@@ -25,6 +28,7 @@ public class UserTextData extends TextData {
         Test test = new Test();
         test.setId(1);
         test.setMsg("1111");
+        System.out.println(test.toString());
         repository.save(test);
     }
 }

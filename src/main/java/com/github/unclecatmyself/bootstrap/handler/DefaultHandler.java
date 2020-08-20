@@ -1,6 +1,7 @@
 package com.github.unclecatmyself.bootstrap.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.github.unclecatmyself.common.base.Handler;
 import com.github.unclecatmyself.common.base.HandlerApi;
 import com.github.unclecatmyself.common.base.HandlerService;
@@ -23,6 +24,9 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -32,11 +36,14 @@ import java.util.Map;
  * Create by UncleCatMySelf in 2018/12/06
  */
 @ChannelHandler.Sharable
+@Component
+@DependsOn("handlerServiceImpl")
 public class DefaultHandler extends Handler {
 
     private final Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
-    private final HandlerApi handlerApi;
+    @Autowired
+    private HandlerApi handlerApi;
 
     public DefaultHandler(HandlerApi handlerApi) {
         super(handlerApi);
@@ -108,39 +115,36 @@ public class DefaultHandler extends Handler {
         }else{
             throw new NoFindHandlerException(NotInChatConstant.NOT_HANDLER);
         }
-        Map<String,Object> maps = (Map) JSON.parse(msg.text());
+        JSONObject maps = JSONObject.parseObject(msg.text());
         maps.put(Constans.TIME, new Date());
-        switch ((String)maps.get(Constans.TYPE)) {
+        switch (maps.getString(Constans.TYPE)) {
             case Constans.LOGIN:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_LOGIN);
                 handlerService.login(channel, maps);
-                AttributeKey<String> token = AttributeKey.valueOf("token");
-                Attribute<String> attr = ctx.channel().attr(token);
-                attr.set((String) maps.get("token"));
                 break;
             //针对个人，发送给自己
             case Constans.SENDME:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_SENDME);
-                handlerService.verify(channel, maps);
+                handlerService.verify(channel);
                 handlerService.sendMeText(channel, maps);
                 break;
             //针对个人，发送给某人
             case Constans.SENDTO:
                 log.info(LogConstant.DefaultWebSocketHandler_SENDTO);
-                handlerService.verify(channel,maps);
-                handlerService.sendToText(channel,maps);
+                handlerService.verify(channel);
+                handlerService.sendToText(channel, maps);
                 break;
             //发送给群组
             case Constans.SENDGROUP:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_SENDGROUP);
-                handlerService.verify(channel,maps);
-                handlerService.sendGroupText(channel,maps);
+                handlerService.verify(channel);
+                handlerService.sendGroupText(channel, maps);
                 break;
             //发送图片，发送给自己
             case Constans.SENDPHOTOTOME:
                 log.info("图片到个人");
-                handlerService.verify(channel,maps);
-                handlerService.sendPhotoToMe(channel,maps);
+                handlerService.verify(channel);
+                handlerService.sendPhotoToMe(channel, maps);
                 break;
             default:
                 break;

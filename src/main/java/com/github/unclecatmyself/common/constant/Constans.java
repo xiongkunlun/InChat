@@ -7,6 +7,8 @@ public class Constans {
 
     public static final String TOKEN = "token";
 
+    public static final String USER_ID = "userId";
+
     public static final String VALUE = "value";
 
     public static final String ONE = "one";
@@ -40,4 +42,8 @@ public class Constans {
     public static final String TIME = "time";
 
     public static final String SERVER = "server";
+    //学生基本信息  groupId#姓名#公司名#学校名#
+    public static final String BASEINFO = "baseInfo";
+    //学生基本信息分隔符
+    public static String BaseInfoSplitor;
 }

@@ -1,6 +1,7 @@
 package com.github.unclecatmyself.bootstrap.backmsg;
 
 import com.github.unclecatmyself.common.constant.Constans;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Map;
  * 列入项目中，默认返回实现
  * Created by MySelf on 2018/11/23.
  */
+@Service
 public class InChatBackMapServiceImpl implements InChatBackMapService {
 
 
@@ -54,12 +56,12 @@ public class InChatBackMapServiceImpl implements InChatBackMapService {
     }
 
 
-    public Map<String, String> sendGroup(String token, String value, String groupId) {
-        Map<String,String> backMap = new HashMap<String,String>();
-        backMap.put(Constans.TYPE,Constans.SENDGROUP);
-        backMap.put(Constans.FROM,token);
-        backMap.put(Constans.VALUE,value);
-        backMap.put(Constans.GROUPID,groupId);
+    public Map<String, String> sendGroup(String userId, String value, String groupId) {
+        Map<String, String> backMap = new HashMap<String, String>();
+        backMap.put(Constans.TYPE, Constans.SENDGROUP);
+        backMap.put(Constans.FROM, userId);
+        backMap.put(Constans.VALUE, value);
+        backMap.put(Constans.GROUPID, groupId);
         return backMap;
     }
 

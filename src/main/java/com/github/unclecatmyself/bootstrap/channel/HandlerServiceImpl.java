@@ -1,11 +1,9 @@
 package com.github.unclecatmyself.bootstrap.channel;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.github.unclecatmyself.auto.ConfigFactory;
 import com.github.unclecatmyself.bootstrap.backmsg.InChatBackMapService;
 import com.github.unclecatmyself.bootstrap.backmsg.InChatBackMapServiceImpl;
-import com.github.unclecatmyself.bootstrap.channel.cache.WsCacheMap;
 import com.github.unclecatmyself.bootstrap.channel.http.HttpChannelService;
 import com.github.unclecatmyself.bootstrap.channel.http.HttpChannelServiceImpl;
 import com.github.unclecatmyself.bootstrap.channel.ws.WebSocketChannelService;
@@ -13,7 +11,11 @@ import com.github.unclecatmyself.common.base.HandlerService;
 import com.github.unclecatmyself.common.bean.SendInChat;
 import com.github.unclecatmyself.common.bean.vo.SendServerVO;
 import com.github.unclecatmyself.common.constant.Constans;
+import com.github.unclecatmyself.common.constant.TableNameConstant;
 import com.github.unclecatmyself.task.TextData;
+import com.github.unclecatmyself.users.DataBaseServiceImpl;
+import com.github.unclecatmyself.users.UserTextData;
+import com.github.unclecatmyself.users.VerifyServiceImpl;
 import com.google.gson.Gson;
 import com.github.unclecatmyself.bootstrap.channel.ws.WsChannelService;
 import com.github.unclecatmyself.bootstrap.verify.InChatVerifyService;
@@ -23,33 +25,51 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by MySelf on 2018/11/21.
  */
+@Service
 public class HandlerServiceImpl extends HandlerService {
 
-    private final InChatVerifyService inChatVerifyService;
+    @Autowired
+    private InChatVerifyService inChatVerifyService;
 
-    private final InChatBackMapService inChatBackMapService = new InChatBackMapServiceImpl();
-
-    private final HttpChannelService httpChannelService = new HttpChannelServiceImpl();
-
-    private final WsChannelService websocketChannelService = new WebSocketChannelService();
-
+    @Autowired
+    private InChatBackMapService inChatBackMapService;
+    @Autowired
+    private HttpChannelService httpChannelService;
+    @Autowired
+    private WsChannelService websocketChannelService;
+    @Autowired
     private DataAsynchronousTask dataAsynchronousTask;
-
+    @Autowired
     private TextData textData;
 
-    public HandlerServiceImpl(DataAsynchronousTask dataAsynchronousTask,InChatVerifyService inChatVerifyService,TextData textData) {
-        this.dataAsynchronousTask = dataAsynchronousTask;
-        this.inChatVerifyService = inChatVerifyService;
-        this.textData = textData;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    AttributeKey<String> userIdAttr = AttributeKey.valueOf(Constans.USER_ID);
+    AttributeKey<String> groupIdAttr = AttributeKey.valueOf(Constans.GROUPID);
+
+
+//    public HandlerServiceImpl(DataAsynchronousTask dataAsynchronousTask, InChatVerifyService inChatVerifyService, TextData textData) {
+//        this.dataAsynchronousTask = dataAsynchronousTask;
+//        this.inChatVerifyService = inChatVerifyService;
+//        this.textData = textData;
+//    }
+
+    public HandlerServiceImpl() {
+
     }
 
 
@@ -65,7 +85,7 @@ public class HandlerServiceImpl extends HandlerService {
 
     @Override
     public void sendFromServer(Channel channel, SendServerVO serverVO) {
-        httpChannelService.sendFromServer(channel,serverVO);
+        httpChannelService.sendFromServer(channel, serverVO);
     }
 
     @Override
@@ -73,8 +93,8 @@ public class HandlerServiceImpl extends HandlerService {
         System.out.println(msg);
         String content = msg.content().toString(CharsetUtil.UTF_8);
         Gson gson = new Gson();
-        SendInChat sendInChat = gson.fromJson(content,SendInChat.class);
-        httpChannelService.sendByInChat(channel,sendInChat);
+        SendInChat sendInChat = gson.fromJson(content, SendInChat.class);
+        httpChannelService.sendByInChat(channel, sendInChat);
     }
 
     @Override
@@ -83,20 +103,20 @@ public class HandlerServiceImpl extends HandlerService {
     }
 
     @Override
-    public boolean login(Channel channel, Map<String,Object> maps) {
+    public boolean login(Channel channel, JSONObject maps) {
         //校验规则，自定义校验规则
         return check(channel, maps);
     }
 
     @Override
-    public void sendMeText(Channel channel, Map<String,Object> maps) {
+    public void sendMeText(Channel channel, Map<String, Object> maps) {
         Gson gson = new Gson();
         channel.writeAndFlush(new TextWebSocketFrame(
                 gson.toJson(inChatBackMapService.sendMe((String) maps.get(Constans.VALUE))))).addListener(
                 new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
-                        if (future.isSuccess()){
+                        if (future.isSuccess()) {
                             dataAsynchronousTask.writeData(maps);
                             textData.writeData(maps);
                         } else {
@@ -121,19 +141,19 @@ public class HandlerServiceImpl extends HandlerService {
         String token = (String) maps.get(Constans.TOKEN);
         //返回给自己
         channel.writeAndFlush(new TextWebSocketFrame(
-                gson.toJson(inChatBackMapService.sendBack(otherOne,value))));
-        if (websocketChannelService.hasOther(otherOne)){
+                gson.toJson(inChatBackMapService.sendBack(otherOne, value))));
+        if (websocketChannelService.hasOther(otherOne)) {
             //发送给对方--在线
             Channel other = websocketChannelService.getChannel(otherOne);
-            if (other == null){
+            if (other == null) {
                 //转http分布式
-                httpChannelService.sendInChat(otherOne,inChatBackMapService.getMsg(token,value));
-            }else{
+                httpChannelService.sendInChat(otherOne, inChatBackMapService.getMsg(token, value));
+            } else {
                 other.writeAndFlush(new TextWebSocketFrame(
-                        gson.toJson(inChatBackMapService.getMsg(token,value))));
+                        gson.toJson(inChatBackMapService.getMsg(token, value))));
             }
-        }else {
-            maps.put(Constans.ON_ONLINE,otherOne);
+        } else {
+            maps.put(Constans.ON_ONLINE, otherOne);
         }
         try {
             dataAsynchronousTask.writeData(maps);
@@ -143,32 +163,39 @@ public class HandlerServiceImpl extends HandlerService {
     }
 
     @Override
-    public void sendGroupText(Channel channel, Map<String, Object> maps) {
+    public void sendGroupText(Channel channel, JSONObject maps) {
         Gson gson = new Gson();
-        String groupId = (String) maps.get(Constans.GROUPID);
-        String token = (String) maps.get(Constans.TOKEN);
-        String value = (String) maps.get(Constans.VALUE);
+        String userId = channel.attr(userIdAttr).get();
+        String groupId = channel.attr(groupIdAttr).get();
+
+        String value = maps.getString(Constans.VALUE);
         List<String> no_online = new ArrayList<>();
-        JSONArray array = inChatVerifyService.getArrayByGroupId(groupId);
+
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String sendUserInfo = hashOperations.get(TableNameConstant.GROUP + ":" + groupId, userId);
+        value = sendUserInfo + Constans.BaseInfoSplitor + value;
+        Set<String> userIds = inChatVerifyService.getAllUserIdByGroupId(groupId);
+        //发给自己
         channel.writeAndFlush(new TextWebSocketFrame(
-                gson.toJson(inChatBackMapService.sendGroup(token,value,groupId))));
-        for (Object item:array) {
-            if (!token.equals(item)){
-                if (websocketChannelService.hasOther((String) item)){
-                    Channel other = websocketChannelService.getChannel((String) item);
-                    if (other == null){
-                        //转http分布式
-                        httpChannelService.sendInChat((String) item,inChatBackMapService.sendGroup(token,value,groupId));
-                    }else{
-                        other.writeAndFlush(new TextWebSocketFrame(
-                                gson.toJson(inChatBackMapService.sendGroup(token,value,groupId))));
+                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId))));
+        //发给其他channel
+        for (String otherUid : userIds) {
+            if (!userId.equals(otherUid)) {
+                if (websocketChannelService.hasOther(otherUid)) {
+                    Channel otherChannel = websocketChannelService.getChannel(otherUid);
+                    if (otherChannel == null) {
+                        //如果找不到channel 那就是在其他的服务器上，所以转分布发送，单机情况下不需要
+//                        httpChannelService.sendInChat(otherUid, inChatBackMapService.sendGroup(userId, value, groupId));
+                    } else {
+                        otherChannel.writeAndFlush(new TextWebSocketFrame(
+                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId))));
                     }
-                }else{
-                    no_online.add((String) item);
+                } else {
+                    no_online.add(otherUid);
                 }
             }
         }
-        maps.put(Constans.ONLINE_GROUP,no_online);
+        maps.put(Constans.ONLINE_GROUP, no_online);
         try {
             dataAsynchronousTask.writeData(maps);
         } catch (Exception e) {
@@ -177,14 +204,13 @@ public class HandlerServiceImpl extends HandlerService {
     }
 
     @Override
-    public void verify(Channel channel, Map<String, Object> maps) {
-        Gson gson = new Gson();
-        String token = (String) maps.get(Constans.TOKEN);
-        System.out.println(token);
-        if (inChatVerifyService.verifyToken(token)){
+    public void verify(Channel channel) {
+        Attribute<String> userAttr = channel.attr(userIdAttr);
+        String userId = userAttr.get();
+        if (userId != null) {
             return;
-        }else{
-            channel.writeAndFlush(new TextWebSocketFrame(gson.toJson(inChatBackMapService.loginError())));
+        } else {
+            channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginError())));
             close(channel);
         }
     }
@@ -202,17 +228,33 @@ public class HandlerServiceImpl extends HandlerService {
         }
     }
 
-    private Boolean check(Channel channel, Map<String, Object> maps){
-        Gson gson = new Gson();
-        String token = (String) maps.get(Constans.TOKEN);
-        if (inChatVerifyService.verifyToken(token)){
-            channel.writeAndFlush(new TextWebSocketFrame(gson.toJson(inChatBackMapService.loginSuccess())));
-            websocketChannelService.loginWsSuccess(channel,token);
+    private Boolean check(Channel channel, JSONObject maps) {
+        String userId = maps.getString(Constans.USER_ID);
+        if (inChatVerifyService.verifyGroup(maps)) {
+            HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+            String userInfo = maps.getString(Constans.BASEINFO);
+            String groupId = userInfo.substring(0, userInfo.indexOf(Constans.BaseInfoSplitor));
+            //保存用户 信息
+            hashOperations.put(TableNameConstant.GROUP + ":" + groupId, userId, userInfo);
+            //channel 保存token
+            channel.attr(userIdAttr).set(userId);
+            channel.attr(groupIdAttr).set(groupId);
+            channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginSuccess())));
+            websocketChannelService.loginWsSuccess(channel, userId);
             return true;
         }
-        channel.writeAndFlush(new TextWebSocketFrame(gson.toJson(inChatBackMapService.loginError())));
+        channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginError())));
         close(channel);
         return false;
+    }
+
+    private String genToken(String userId) {
+        return UUID.randomUUID().toString();
+    }
+
+    private String getUserIdByToken(String token) {
+        HashOperations<String, String, String> valueOperations = redisTemplate.opsForHash();
+        return valueOperations.get("tu", token);
     }
 
     @Override

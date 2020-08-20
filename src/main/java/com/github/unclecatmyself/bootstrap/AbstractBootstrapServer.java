@@ -4,6 +4,8 @@ package com.github.unclecatmyself.bootstrap;
 import com.github.unclecatmyself.auto.ConfigFactory;
 import com.github.unclecatmyself.bootstrap.channel.HandlerServiceImpl;
 import com.github.unclecatmyself.bootstrap.handler.DefaultHandler;
+import com.github.unclecatmyself.common.base.Handler;
+import com.github.unclecatmyself.common.base.HandlerApi;
 import com.github.unclecatmyself.common.bean.InitNetty;
 import com.github.unclecatmyself.common.constant.BootstrapConstant;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
@@ -22,6 +24,9 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.stereotype.Component;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -33,6 +38,8 @@ import java.util.concurrent.Executors;
 /**
  * Create by UncleCatMySelf in 2018/12/06
  **/
+@Component
+
 public abstract class AbstractBootstrapServer implements BootstrapServer {
 
     private   String PROTOCOL = "TLS";
@@ -53,15 +60,18 @@ public abstract class AbstractBootstrapServer implements BootstrapServer {
                 SSLEngine engine = context.createSSLEngine();
                 engine.setUseClientMode(false);
                 engine.setNeedClientAuth(false);
-                channelPipeline.addLast(BootstrapConstant.SSL,new SslHandler(engine));
+                channelPipeline.addLast(BootstrapConstant.SSL, new SslHandler(engine));
                 System.out.println("open ssl  success");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        intProtocolHandler(channelPipeline,serverBean);
-        channelPipeline.addLast(new IdleStateHandler(serverBean.getHeart(),0,0));
-        channelPipeline.addLast(new DefaultHandler(new HandlerServiceImpl(new DataAsynchronousTask(ConfigFactory.inChatToDataBaseService),ConfigFactory.inChatVerifyService,ConfigFactory.textData)));
+        intProtocolHandler(channelPipeline, serverBean);
+        channelPipeline.addLast(new IdleStateHandler(serverBean.getHeart(), 0, 0));
+        //原来是手动new，现在做成自动注入，部分属性先写死
+//        channelPipeline.addLast(new DefaultHandler(new HandlerServiceImpl(new DataAsynchronousTask(ConfigFactory.inChatToDataBaseService),ConfigFactory.inChatVerifyService,ConfigFactory.textData)));
+        channelPipeline.addLast(new DefaultHandler());
+
     }
 
     private  void intProtocolHandler(ChannelPipeline channelPipeline,InitNetty serverBean){
