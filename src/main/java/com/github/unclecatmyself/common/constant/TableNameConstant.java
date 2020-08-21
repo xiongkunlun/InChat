@@ -17,4 +17,5 @@ public class TableNameConstant {
     //教师消息表 list (消息id)
     public static final String TMSG = "tmsg";
 
+    public static final String IDGEN = "idGen";
 }

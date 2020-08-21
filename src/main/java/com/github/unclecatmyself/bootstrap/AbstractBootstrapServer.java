@@ -26,6 +26,7 @@ import io.netty.util.internal.SystemPropertyUtil;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -49,7 +50,7 @@ public abstract class AbstractBootstrapServer implements BootstrapServer {
      * @param channelPipeline channelPipeline
      * @param serverBean      服务配置参数
      */
-    protected void initHandler(ChannelPipeline channelPipeline, InitNetty serverBean, HandlerApi handlerApi) {
+    protected void initHandler(ChannelPipeline channelPipeline, InitNetty serverBean, HandlerApi handlerApi, RedisTemplate redisTemplate) {
         if (serverBean.isSsl()) {
             if (!ObjectUtils.allNotNull(serverBean.getJksCertificatePassword(), serverBean.getJksFile(), serverBean.getJksStorePassword())) {
                 throw new NullPointerException(NotInChatConstant.SSL_NOT_FIND);
@@ -69,7 +70,7 @@ public abstract class AbstractBootstrapServer implements BootstrapServer {
         channelPipeline.addLast(new IdleStateHandler(serverBean.getHeart(), 0, 0));
         //原来是手动new，现在做成自动注入，部分属性先写死
 //        channelPipeline.addLast(new DefaultHandler(new HandlerServiceImpl(new DataAsynchronousTask(ConfigFactory.inChatToDataBaseService),ConfigFactory.inChatVerifyService,ConfigFactory.textData)));
-        channelPipeline.addLast(new DefaultHandler(handlerApi));
+        channelPipeline.addLast(new DefaultHandler(handlerApi, redisTemplate));
 
     }
 

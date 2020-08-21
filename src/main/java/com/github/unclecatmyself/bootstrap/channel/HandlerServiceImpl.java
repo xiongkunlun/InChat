@@ -1,5 +1,6 @@
 package com.github.unclecatmyself.bootstrap.channel;
 
+import ch.qos.logback.classic.db.names.TableName;
 import com.alibaba.fastjson.JSONObject;
 import com.github.unclecatmyself.auto.ConfigFactory;
 import com.github.unclecatmyself.bootstrap.backmsg.InChatBackMapService;
@@ -30,7 +31,9 @@ import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -57,9 +60,6 @@ public class HandlerServiceImpl extends HandlerService {
 
     @Autowired
     private RedisTemplate redisTemplate;
-
-    AttributeKey<String> userIdAttr = AttributeKey.valueOf(Constans.USER_ID);
-    AttributeKey<String> groupIdAttr = AttributeKey.valueOf(Constans.GROUPID);
 
 
 //    public HandlerServiceImpl(DataAsynchronousTask dataAsynchronousTask, InChatVerifyService inChatVerifyService, TextData textData) {
@@ -164,20 +164,29 @@ public class HandlerServiceImpl extends HandlerService {
 
     @Override
     public void sendGroupText(Channel channel, JSONObject maps) {
-        Gson gson = new Gson();
-        String userId = channel.attr(userIdAttr).get();
-        String groupId = channel.attr(groupIdAttr).get();
-
+        String userId = channel.attr(Constans.userIdAttr).get();
+        String groupId = channel.attr(Constans.groupIdAttr).get();
         String value = maps.getString(Constans.VALUE);
+        HashOperations<String, Object, String> hashOperations = redisTemplate.opsForHash();
+        //记录消息
+        ValueOperations idGen = redisTemplate.opsForValue();
+        Long increment = idGen.increment(TableNameConstant.IDGEN, 1);
+        hashOperations.put(TableNameConstant.MSG + ":" + groupId, increment, value);
+        boolean b = checkTeacher(userId);
+        if (b) {
+            //记录为通知信息
+            ListOperations listOperations = redisTemplate.opsForList();
+            listOperations.leftPush(TableNameConstant.TMSG, increment);
+        }
+
         List<String> no_online = new ArrayList<>();
 
-        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
         String sendUserInfo = hashOperations.get(TableNameConstant.GROUP + ":" + groupId, userId);
         value = sendUserInfo + Constans.BaseInfoSplitor + value;
         Set<String> userIds = inChatVerifyService.getAllUserIdByGroupId(groupId);
         //发给自己
         channel.writeAndFlush(new TextWebSocketFrame(
-                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId))));
+                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, maps.getDate(Constans.TIME), b))));
         //发给其他channel
         for (String otherUid : userIds) {
             if (!userId.equals(otherUid)) {
@@ -188,7 +197,7 @@ public class HandlerServiceImpl extends HandlerService {
 //                        httpChannelService.sendInChat(otherUid, inChatBackMapService.sendGroup(userId, value, groupId));
                     } else {
                         otherChannel.writeAndFlush(new TextWebSocketFrame(
-                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId))));
+                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, maps.getDate(Constans.TIME), b))));
                     }
                 } else {
                     no_online.add(otherUid);
@@ -203,9 +212,13 @@ public class HandlerServiceImpl extends HandlerService {
         }
     }
 
+    private boolean checkTeacher(String userId) {
+        return Integer.valueOf(userId) % 2 == 1;
+    }
+
     @Override
     public void verify(Channel channel) {
-        Attribute<String> userAttr = channel.attr(userIdAttr);
+        Attribute<String> userAttr = channel.attr(Constans.userIdAttr);
         String userId = userAttr.get();
         if (userId != null) {
             return;
@@ -237,8 +250,8 @@ public class HandlerServiceImpl extends HandlerService {
             //保存用户 信息
             hashOperations.put(TableNameConstant.GROUP + ":" + groupId, userId, userInfo);
             //channel 保存token
-            channel.attr(userIdAttr).set(userId);
-            channel.attr(groupIdAttr).set(groupId);
+            channel.attr(Constans.userIdAttr).set(userId);
+            channel.attr(Constans.groupIdAttr).set(groupId);
             channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginSuccess())));
             websocketChannelService.loginWsSuccess(channel, userId);
             return true;

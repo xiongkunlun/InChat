@@ -3,6 +3,9 @@ package com.github.unclecatmyself.bootstrap.backmsg;
 import com.github.unclecatmyself.common.constant.Constans;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +16,7 @@ import java.util.Map;
 @Service
 public class InChatBackMapServiceImpl implements InChatBackMapService {
 
+    public SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
     public Map<String, String> loginSuccess() {
         Map<String,String> backMap = new HashMap<String,String>();
@@ -48,20 +52,22 @@ public class InChatBackMapServiceImpl implements InChatBackMapService {
 
 
     public Map<String, String> getMsg(String token, String value) {
-        Map<String,String> backMap = new HashMap<String,String>();
-        backMap.put(Constans.TYPE,Constans.SENDTO);
-        backMap.put(Constans.FROM,token);
-        backMap.put(Constans.VALUE,value);
+        Map<String, String> backMap = new HashMap<String, String>();
+        backMap.put(Constans.TYPE, Constans.SENDTO);
+        backMap.put(Constans.FROM, token);
+        backMap.put(Constans.VALUE, value);
         return backMap;
     }
 
 
-    public Map<String, String> sendGroup(String userId, String value, String groupId) {
-        Map<String, String> backMap = new HashMap<String, String>();
+    public Map<String, Object> sendGroup(String userId, String value, String groupId, Date time, boolean b) {
+        Map<String, Object> backMap = new HashMap<String, Object>();
+        backMap.put(Constans.TIME, df.format(time));
         backMap.put(Constans.TYPE, Constans.SENDGROUP);
         backMap.put(Constans.FROM, userId);
         backMap.put(Constans.VALUE, value);
         backMap.put(Constans.GROUPID, groupId);
+        backMap.put(Constans.Notify, b);
         return backMap;
     }
 

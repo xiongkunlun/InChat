@@ -1,6 +1,7 @@
 package com.github.unclecatmyself.bootstrap.backmsg;
 
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -46,10 +47,13 @@ public interface InChatBackMapService {
 
     /**
      * 发送消息到群里
-     * @param me {@link String} 发送人的标签
-     * @param value {@link String} 通讯消息
+     *
+     * @param me      {@link String} 发送人的标签
+     * @param value   {@link String} 通讯消息
      * @param groupId {@link String} 群聊Id
+     * @param time    发送时间
+     * @param b       教师通知
      * @return
      */
-    Map<String,String> sendGroup(String me,String value,String groupId);
+    Map<String, Object> sendGroup(String me, String value, String groupId, Date time, boolean b);
 }

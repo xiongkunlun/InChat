@@ -2,6 +2,7 @@ package com.github.unclecatmyself.bootstrap.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.unclecatmyself.bootstrap.channel.cache.WsCacheMap;
 import com.github.unclecatmyself.common.base.Handler;
 import com.github.unclecatmyself.common.base.HandlerApi;
 import com.github.unclecatmyself.common.base.HandlerService;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
@@ -40,20 +42,26 @@ import java.util.Map;
 @DependsOn("handlerServiceImpl")
 public class DefaultHandler extends Handler {
 
+    @Autowired
+    WsCacheMap wsCacheMap;
+
     private final Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
     private HandlerApi handlerApi;
 
-    public DefaultHandler(HandlerApi handlerApi) {
+    private RedisTemplate redisTemplate;
+
+    public DefaultHandler(HandlerApi handlerApi, RedisTemplate redisTemplate) {
         super(handlerApi);
         this.handlerApi = handlerApi;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
     protected void webdoMessage(ChannelHandlerContext ctx, WebSocketFrame msg) {
         Channel channel = ctx.channel();
         HandlerService httpHandlerService;
-        if (handlerApi instanceof HandlerService){
+        if (handlerApi instanceof HandlerService) {
             httpHandlerService = (HandlerService)handlerApi;
         }else {
             throw new NoFindHandlerException(NotInChatConstant.NOT_HANDLER);
@@ -100,18 +108,24 @@ public class DefaultHandler extends Handler {
                 httpHandlerService.notFindUri(channel);
                 break;
             default:
-                System.out.println("未匹配"+msg);
+                System.out.println("未匹配" + msg);
                 break;
         }
+    }
+
+    @Override
+    protected void removeInactiveChannel(String userId) {
+        WsCacheMap.deleteWs(userId);
+        WsCacheMap.deleteAd(userId);
     }
 
     @Override
     protected void textdoMessage(ChannelHandlerContext ctx, TextWebSocketFrame msg) {
         Channel channel = ctx.channel();
         HandlerService handlerService;
-        if (handlerApi instanceof HandlerService){
-            handlerService = (HandlerService)handlerApi;
-        }else{
+        if (handlerApi instanceof HandlerService) {
+            handlerService = (HandlerService) handlerApi;
+        } else {
             throw new NoFindHandlerException(NotInChatConstant.NOT_HANDLER);
         }
         JSONObject maps = JSONObject.parseObject(msg.text());

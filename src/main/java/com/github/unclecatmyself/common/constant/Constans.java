@@ -1,5 +1,7 @@
 package com.github.unclecatmyself.common.constant;
 
+import io.netty.util.AttributeKey;
+
 /**
  * Created by MySelf on 2018/12/5.
  */
@@ -45,5 +47,13 @@ public class Constans {
     //学生基本信息  groupId#姓名#公司名#学校名#
     public static final String BASEINFO = "baseInfo";
     //学生基本信息分隔符
-    public static String BaseInfoSplitor;
+    public static String BaseInfoSplitor = "#";
+
+    public static final AttributeKey<String> userIdAttr = AttributeKey.valueOf(Constans.USER_ID);
+    public static final AttributeKey<String> groupIdAttr = AttributeKey.valueOf(Constans.GROUPID);
+
+    /**
+     *
+     */
+    public static String Notify = "notify";
 }

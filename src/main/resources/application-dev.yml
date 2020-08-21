@@ -3,7 +3,8 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/inchat
     username: root
-    password: 123456
+    password: Mysql../3
+  #    password: 123456
   jpa:
     show-sql: true
   redis:

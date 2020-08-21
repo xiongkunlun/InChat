@@ -54,12 +54,8 @@ public class WsCacheMap {
      * @param userId  {@link String} 用户id
      * @param channel {@link Channel} 链接实例
      */
-    public void saveWs(String userId, Channel channel) {
+    public static void saveWs(String userId, Channel channel) {
         maps.put(userId, channel);
-        if (isDistributed) {
-            ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
-            stringStringValueOperations.set(userId, RedisUtil.convertMD5(address, userId));
-        }
     }
 
     /**
@@ -98,14 +94,11 @@ public class WsCacheMap {
     /**
      * 删除链接数据
      *
-     * @param token {@link String} 用户标识
+     * @param userId {@link String} 用户标识
      */
-    public void deleteWs(String token) {
+    public static void deleteWs(String userId) {
         try {
-            maps.remove(token);
-            if (isDistributed) {
-                stringRedisTemplate.delete(token);
-            }
+            maps.remove(userId);
         } catch (NullPointerException e) {
             throw new NotFindLoginChannlException(NotInChatConstant.Not_Login);
         }

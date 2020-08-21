@@ -1,5 +1,6 @@
 package com.github.unclecatmyself.common.base;
 
+import com.github.unclecatmyself.common.constant.Constans;
 import com.github.unclecatmyself.common.constant.LogConstant;
 import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import io.netty.channel.Channel;
@@ -21,8 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class Handler extends SimpleChannelInboundHandler<Object> {
 
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
-
-    private AttributeKey<String> key = AttributeKey.valueOf("Id");
 
     public HandlerApi handlerApi;
 
@@ -55,20 +54,23 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
         log.info(LogConstant.CHANNELINACTIVE+ctx.channel().localAddress().toString()+LogConstant.CLOSE_SUCCESS);
         try {
             Channel channel = ctx.channel();
-            Attribute<String> attr = channel.attr(key);
-            if (attr != null) {
-                String id = attr.get();
-
+            Attribute<String> userIdAttr = channel.attr(Constans.userIdAttr);
+            if (userIdAttr != null) {
+                String userId = userIdAttr.get();
                 //移除id相关的记录，移除channel
+                removeInactiveChannel(userId);
+
             }
             System.out.println("channelIdText:" + channel.toString());  //a754ebc1
             System.out.println("longstr" + channel.id().asLongText()); //60位长度 例如1c1b0dfffea99bb0-00003108-00000001-e1e893ada698884f-9dabc410
 
             handlerApi.close(ctx.channel());
-        }catch (NotFindLoginChannlException e){
+        } catch (NotFindLoginChannlException e) {
             log.error(LogConstant.NOTFINDLOGINCHANNLEXCEPTION);
         }
     }
+
+    protected abstract void removeInactiveChannel(String userId);
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
