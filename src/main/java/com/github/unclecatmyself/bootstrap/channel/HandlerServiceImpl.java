@@ -53,7 +53,7 @@ public class HandlerServiceImpl extends HandlerService {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    public SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
 
 //    public HandlerServiceImpl(DataAsynchronousTask dataAsynchronousTask, InChatVerifyService inChatVerifyService, TextData textData) {
 //        this.dataAsynchronousTask = dataAsynchronousTask;
@@ -163,9 +163,10 @@ public class HandlerServiceImpl extends HandlerService {
         String formatTime = df.format(time);
         String value = maps.getString(Constans.VALUE);
         HashOperations<String, Object, String> hashOperations = redisTemplate.opsForHash();
-        String sendUserInfo = hashOperations.get(TableNameConstant.GROUP + ":" + groupId, userId);
+        String sendUserInfo = hashOperations.get(TableNameConstant.UBASE + ":" + groupId, userId);
         //格式化消息为 userinfo#格式化时间#消息内容
-        value = new StringBuilder().append(sendUserInfo)
+        String saveValue = new StringBuilder()
+                .append(userId)
                 .append(Constans.BaseInfoSplitor)
                 .append(formatTime)
                 .append(Constans.BaseInfoSplitor)
@@ -174,7 +175,7 @@ public class HandlerServiceImpl extends HandlerService {
         //记录消息
         ValueOperations idGen = redisTemplate.opsForValue();
         Long increment = idGen.increment(TableNameConstant.IDGEN, 1);
-        hashOperations.put(TableNameConstant.MSG + ":" + groupId, increment + "", value);
+        hashOperations.put(TableNameConstant.MSG + ":" + groupId, increment + "", saveValue);
         boolean b = checkTeacher(userId);
         if (b) {
             //记录为通知信息
@@ -184,9 +185,16 @@ public class HandlerServiceImpl extends HandlerService {
 
         List<String> no_online = new ArrayList<>();
         Set<String> userIds = inChatVerifyService.getAllUserIdByGroupId(groupId);
+
+        String sendValue = new StringBuilder()
+                .append(sendUserInfo)
+                .append(Constans.BaseInfoSplitor)
+                .append(formatTime)
+                .append(Constans.BaseInfoSplitor)
+                .append(value).toString();
         //发给自己
         channel.writeAndFlush(new TextWebSocketFrame(
-                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, b))));
+                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, sendValue, groupId, b))));
         //发给其他channel
         for (String otherUid : userIds) {
             if (!userId.equals(otherUid)) {
@@ -197,7 +205,7 @@ public class HandlerServiceImpl extends HandlerService {
 //                        httpChannelService.sendInChat(otherUid, inChatBackMapService.sendGroup(userId, value, groupId));
                     } else {
                         otherChannel.writeAndFlush(new TextWebSocketFrame(
-                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, b))));
+                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, sendValue, groupId, b))));
                     }
                 } else {
                     no_online.add(otherUid);
@@ -250,9 +258,17 @@ public class HandlerServiceImpl extends HandlerService {
         //默认只展示最近的100条
         Long offset = size - 100 < 0 ? 0L : size - 100;
 
-        List<String> range = listOperations.range(tableName, offset, size);
+        List<String> hisIds = listOperations.range(tableName, offset, size);
         HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
-        List<String> list = hashOperations.multiGet(TableNameConstant.MSG + ":" + groupId, range);
+        List<String> ls = new ArrayList<>(hisIds.size());
+        for (String hisId : hisIds) {
+            String msg = hashOperations.get(TableNameConstant.MSG + ":" + groupId, hisId);
+            String[] split = msg.split("#");
+            String senderId = split[0];
+            String senderBaseInfo = hashOperations.get(TableNameConstant.UBASE, senderId);
+            ls.add(msg.replace(senderId, senderBaseInfo + Constans.BaseInfoSplitor));
+        }
+        List<String> list = hashOperations.multiGet(TableNameConstant.MSG + ":" + groupId, hisIds);
         JSONObject obj = new JSONObject();
         obj.put("type", "hisNotify");
         obj.put("value", list);
@@ -266,7 +282,7 @@ public class HandlerServiceImpl extends HandlerService {
             String userInfo = maps.getString(Constans.BASEINFO);
             String groupId = userInfo.substring(0, userInfo.indexOf(Constans.BaseInfoSplitor));
             //保存用户 信息
-            hashOperations.put(TableNameConstant.GROUP + ":" + groupId, userId + "", userInfo);
+            hashOperations.put(TableNameConstant.UBASE + ":" + groupId, userId + "", userInfo);
             //channel 保存token
             channel.attr(Constans.userIdAttr).set(userId);
             channel.attr(Constans.groupIdAttr).set(groupId);

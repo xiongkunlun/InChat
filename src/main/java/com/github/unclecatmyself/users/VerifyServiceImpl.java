@@ -33,7 +33,7 @@ public class VerifyServiceImpl implements InChatVerifyService {
      */
     public Set<String> getAllUserIdByGroupId(String groupId) {
         HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
-        return hashOperations.keys(TableNameConstant.GROUP + ":" + groupId);
+        return hashOperations.keys(TableNameConstant.UBASE + ":" + groupId);
     }
 
     /**
