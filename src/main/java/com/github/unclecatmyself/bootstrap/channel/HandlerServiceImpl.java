@@ -265,13 +265,12 @@ public class HandlerServiceImpl extends HandlerService {
             String msg = hashOperations.get(TableNameConstant.MSG + ":" + groupId, hisId);
             String[] split = msg.split("#");
             String senderId = split[0];
-            String senderBaseInfo = hashOperations.get(TableNameConstant.UBASE, senderId);
-            ls.add(msg.replace(senderId, senderBaseInfo + Constans.BaseInfoSplitor));
+            String senderBaseInfo = hashOperations.get(TableNameConstant.UBASE + ":" + groupId, senderId);
+            ls.add(msg.replace(senderId, senderBaseInfo));
         }
-        List<String> list = hashOperations.multiGet(TableNameConstant.MSG + ":" + groupId, hisIds);
         JSONObject obj = new JSONObject();
         obj.put("type", "hisNotify");
-        obj.put("value", list);
+        obj.put("value", ls);
         channel.writeAndFlush(new TextWebSocketFrame(obj.toJSONString()));
     }
 
