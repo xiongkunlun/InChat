@@ -51,9 +51,8 @@ public interface InChatBackMapService {
      * @param me      {@link String} 发送人的标签
      * @param value   {@link String} 通讯消息
      * @param groupId {@link String} 群聊Id
-     * @param time    发送时间
      * @param b       教师通知
      * @return
      */
-    Map<String, Object> sendGroup(String me, String value, String groupId, Date time, boolean b);
+    Map<String, Object> sendGroup(String me, String value, String groupId, boolean b);
 }

@@ -23,6 +23,8 @@ public class LogConstant {
 
     public static final String DEFAULTWEBSOCKETHANDLER_LOGIN = "[DefaultWebSocketHandler.textdoMessage.LOGIN]";
 
+    public static final String DEFAULTWEBSOCKETHANDLER_HISNOTIFY = "[DefaultWebSocketHandler.textdoMessage.HISNOTIFY]";
+
     public static final String DEFAULTWEBSOCKETHANDLER_SENDME = "[DefaultWebSocketHandler.textdoMessage.SENDME]";
 
     public static final String DefaultWebSocketHandler_SENDTO = "[DefaultWebSocketHandler.textdoMessage.SENDTO]";

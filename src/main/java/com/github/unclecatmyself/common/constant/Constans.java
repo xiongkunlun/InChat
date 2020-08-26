@@ -25,6 +25,8 @@ public class Constans {
 
     public static final String LOGIN = "login";
 
+    public static final String HISNOTIFY = "hisNotify";
+
     public static final String SUCCESS = "success";
 
     public static final String TRUE = "true";

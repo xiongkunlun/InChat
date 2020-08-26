@@ -136,6 +136,11 @@ public class DefaultHandler extends Handler {
                 handlerService.login(channel, maps);
                 break;
             //针对个人，发送给自己
+            case Constans.HISNOTIFY:
+                log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_HISNOTIFY);
+                handlerService.hisNotify(channel, maps);
+                break;
+            //针对个人，发送给自己
             case Constans.SENDME:
                 log.info(LogConstant.DEFAULTWEBSOCKETHANDLER_SENDME);
                 handlerService.verify(channel);

@@ -25,21 +25,26 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
 
     public HandlerApi handlerApi;
 
-    public Handler(HandlerApi handlerApi){
+    public Handler(HandlerApi handlerApi) {
         this.handlerApi = handlerApi;
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof TextWebSocketFrame){
-            System.out.println("TextWebSocketFrame"+msg);
-            textdoMessage(ctx,(TextWebSocketFrame)msg);
-        }else if (msg instanceof WebSocketFrame){
-            System.out.println("WebSocketFrame"+msg);
-            webdoMessage(ctx,(WebSocketFrame)msg);
-        }else if (msg instanceof FullHttpRequest){
-            System.out.println("FullHttpRequest"+msg);
-            httpdoMessage(ctx,(FullHttpRequest)msg);
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+        try {
+            if (msg instanceof TextWebSocketFrame) {
+                System.out.println("TextWebSocketFrame" + msg);
+                textdoMessage(ctx, (TextWebSocketFrame) msg);
+            } else if (msg instanceof WebSocketFrame) {
+                System.out.println("WebSocketFrame" + msg);
+                webdoMessage(ctx, (WebSocketFrame) msg);
+            } else if (msg instanceof FullHttpRequest) {
+                System.out.println("FullHttpRequest" + msg);
+                httpdoMessage(ctx, (FullHttpRequest) msg);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 
@@ -51,7 +56,7 @@ public abstract class Handler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.info(LogConstant.CHANNELINACTIVE+ctx.channel().localAddress().toString()+LogConstant.CLOSE_SUCCESS);
+        log.info(LogConstant.CHANNELINACTIVE + ctx.channel().localAddress().toString() + LogConstant.CLOSE_SUCCESS);
         try {
             Channel channel = ctx.channel();
             Attribute<String> userIdAttr = channel.attr(Constans.userIdAttr);

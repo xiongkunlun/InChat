@@ -57,10 +57,11 @@ public class NettyBootstrapServer extends AbstractBootstrapServer {
     /**
      * 服务开启
      */
-    public void start() {
+    public void start() throws InterruptedException {
+        String ip = "0.0.0.0";
         initEventPool();
         bootstrap.group(bossGroup, workGroup)
-                .channel(useEpoll()?EpollServerSocketChannel.class:NioServerSocketChannel.class)
+                .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, serverBean.isReuseaddr())
                 .option(ChannelOption.SO_BACKLOG, serverBean.getBacklog())
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
@@ -73,13 +74,15 @@ public class NettyBootstrapServer extends AbstractBootstrapServer {
                 .childOption(ChannelOption.TCP_NODELAY, serverBean.isNodelay())
                 .childOption(ChannelOption.SO_KEEPALIVE, serverBean.isKeepalive())
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-        bootstrap.bind(IpUtils.getHost(),serverBean.getWebport()).addListener((ChannelFutureListener) channelFuture -> {
+        bootstrap.bind(ip, serverBean.getWebport()).addListener((ChannelFutureListener) channelFuture -> {
             if (channelFuture.isSuccess()) {
-                log.info("服务端启动成功【" + IpUtils.getHost() + ":" + serverBean.getWebport() + "】");
-                AutoConfig.address = IpUtils.getHost()+":"+serverBean.getWebport();
-            }else{
-                log.info("服务端启动失败【" + IpUtils.getHost() + ":" + serverBean.getWebport() + "】");}
-        });
+                System.out.println("sout netty server start success【" + ip + ":" + serverBean.getWebport() + "】");
+                log.info("服务端启动成功【" + ip + ":" + serverBean.getWebport() + "】");
+                AutoConfig.address = ip + ":" + serverBean.getWebport();
+            } else {
+                log.info("\nnetty start fail【" + IpUtils.getHost() + ":" + serverBean.getWebport() + "】");
+            }
+        }).sync();
     }
     /**
      * 初始化EnentPool 参数

@@ -84,8 +84,11 @@ public abstract class HandlerService implements HandlerApi {
 
     /**
      * 发送图片给个人
+     *
      * @param channel {@link Channel} 链接实例
-     * @param maps {@link Map} 数据信息
+     * @param maps    {@link Map} 数据信息
      */
     public abstract void sendPhotoToMe(Channel channel, Map<String, Object> maps);
+
+    public abstract void hisNotify(Channel channel, JSONObject maps);
 }

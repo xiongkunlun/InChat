@@ -28,8 +28,8 @@ public abstract class InitServer {
     /**
      * 主要还是这个{@link NettyBootstrapServer},实例化想要的netty配置服务
      */
-    public static void open(){
-        if(serverBean!=null) {
+    public static void open() throws InterruptedException {
+        if (serverBean != null) {
 //            bootstrapServer = new NettyBootstrapServer();
             bootstrapServer = SpringContextUtils.getBean(NettyBootstrapServer.class);
             bootstrapServer.setServerBean(serverBean);

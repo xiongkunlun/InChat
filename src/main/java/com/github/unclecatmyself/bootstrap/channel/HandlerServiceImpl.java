@@ -30,12 +30,10 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -61,6 +59,7 @@ public class HandlerServiceImpl extends HandlerService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    public SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 //    public HandlerServiceImpl(DataAsynchronousTask dataAsynchronousTask, InChatVerifyService inChatVerifyService, TextData textData) {
 //        this.dataAsynchronousTask = dataAsynchronousTask;
@@ -166,27 +165,34 @@ public class HandlerServiceImpl extends HandlerService {
     public void sendGroupText(Channel channel, JSONObject maps) {
         String userId = channel.attr(Constans.userIdAttr).get();
         String groupId = channel.attr(Constans.groupIdAttr).get();
+        Date time = maps.getDate(Constans.TIME);
+        String formatTime = df.format(time);
         String value = maps.getString(Constans.VALUE);
         HashOperations<String, Object, String> hashOperations = redisTemplate.opsForHash();
+        String sendUserInfo = hashOperations.get(TableNameConstant.GROUP + ":" + groupId, userId);
+        //格式化消息为 userinfo#格式化时间#消息内容
+        value = new StringBuilder().append(sendUserInfo)
+                .append(Constans.BaseInfoSplitor)
+                .append(formatTime)
+                .append(Constans.BaseInfoSplitor)
+                .append(value).toString();
+
         //记录消息
         ValueOperations idGen = redisTemplate.opsForValue();
         Long increment = idGen.increment(TableNameConstant.IDGEN, 1);
-        hashOperations.put(TableNameConstant.MSG + ":" + groupId, increment, value);
+        hashOperations.put(TableNameConstant.MSG + ":" + groupId, increment + "", value);
         boolean b = checkTeacher(userId);
         if (b) {
             //记录为通知信息
             ListOperations listOperations = redisTemplate.opsForList();
-            listOperations.leftPush(TableNameConstant.TMSG, increment);
+            listOperations.leftPush(TableNameConstant.TMSG + ":" + groupId, increment + "");
         }
 
         List<String> no_online = new ArrayList<>();
-
-        String sendUserInfo = hashOperations.get(TableNameConstant.GROUP + ":" + groupId, userId);
-        value = sendUserInfo + Constans.BaseInfoSplitor + value;
         Set<String> userIds = inChatVerifyService.getAllUserIdByGroupId(groupId);
         //发给自己
         channel.writeAndFlush(new TextWebSocketFrame(
-                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, maps.getDate(Constans.TIME), b))));
+                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, b))));
         //发给其他channel
         for (String otherUid : userIds) {
             if (!userId.equals(otherUid)) {
@@ -197,7 +203,7 @@ public class HandlerServiceImpl extends HandlerService {
 //                        httpChannelService.sendInChat(otherUid, inChatBackMapService.sendGroup(userId, value, groupId));
                     } else {
                         otherChannel.writeAndFlush(new TextWebSocketFrame(
-                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, maps.getDate(Constans.TIME), b))));
+                                JSONObject.toJSONString(inChatBackMapService.sendGroup(userId, value, groupId, b))));
                     }
                 } else {
                     no_online.add(otherUid);
@@ -241,6 +247,24 @@ public class HandlerServiceImpl extends HandlerService {
         }
     }
 
+    @Override
+    public void hisNotify(Channel channel, JSONObject maps) {
+        String groupId = maps.getString("groupId");
+        String tableName = TableNameConstant.TMSG + ":" + groupId;
+        ListOperations listOperations = redisTemplate.opsForList();
+        Long size = listOperations.size(tableName);
+        //默认只展示最近的100条
+        Long offset = size - 100 < 0 ? 0L : size - 100;
+
+        List<String> range = listOperations.range(tableName, offset, size);
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        List<String> list = hashOperations.multiGet(TableNameConstant.MSG + ":" + groupId, range);
+        JSONObject obj = new JSONObject();
+        obj.put("type", "hisNotify");
+        obj.put("value", list);
+        channel.writeAndFlush(new TextWebSocketFrame(obj.toJSONString()));
+    }
+
     private Boolean check(Channel channel, JSONObject maps) {
         String userId = maps.getString(Constans.USER_ID);
         if (inChatVerifyService.verifyGroup(maps)) {
@@ -248,7 +272,7 @@ public class HandlerServiceImpl extends HandlerService {
             String userInfo = maps.getString(Constans.BASEINFO);
             String groupId = userInfo.substring(0, userInfo.indexOf(Constans.BaseInfoSplitor));
             //保存用户 信息
-            hashOperations.put(TableNameConstant.GROUP + ":" + groupId, userId, userInfo);
+            hashOperations.put(TableNameConstant.GROUP + ":" + groupId, userId + "", userInfo);
             //channel 保存token
             channel.attr(Constans.userIdAttr).set(userId);
             channel.attr(Constans.groupIdAttr).set(groupId);

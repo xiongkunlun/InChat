@@ -16,8 +16,6 @@ import java.util.Map;
 @Service
 public class InChatBackMapServiceImpl implements InChatBackMapService {
 
-    public SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-
     public Map<String, String> loginSuccess() {
         Map<String,String> backMap = new HashMap<String,String>();
         backMap.put(Constans.TYPE,Constans.LOGIN);
@@ -60,9 +58,8 @@ public class InChatBackMapServiceImpl implements InChatBackMapService {
     }
 
 
-    public Map<String, Object> sendGroup(String userId, String value, String groupId, Date time, boolean b) {
+    public Map<String, Object> sendGroup(String userId, String value, String groupId, boolean b) {
         Map<String, Object> backMap = new HashMap<String, Object>();
-        backMap.put(Constans.TIME, df.format(time));
         backMap.put(Constans.TYPE, Constans.SENDGROUP);
         backMap.put(Constans.FROM, userId);
         backMap.put(Constans.VALUE, value);

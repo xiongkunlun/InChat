@@ -39,9 +39,6 @@ public class HttpChannelServiceImpl implements HttpChannelService {
     @Autowired
     private WsCacheMap wsCacheMap;
 
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-
     @Override
     public void getSize(Channel channel) {
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
