@@ -1,13 +1,10 @@
 package com.github.unclecatmyself.bootstrap.channel.cache;
 
 import com.github.unclecatmyself.auto.AutoConfig;
-import com.github.unclecatmyself.auto.ConfigFactory;
-import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
-import com.github.unclecatmyself.common.utils.RedisUtil;
+import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;

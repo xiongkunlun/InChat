@@ -1,7 +1,6 @@
 package com.github.unclecatmyself.bootstrap.backmsg;
 
 
-import java.util.Date;
 import java.util.Map;
 
 /**

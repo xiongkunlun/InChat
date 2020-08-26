@@ -1,6 +1,5 @@
 package com.github.unclecatmyself.bootstrap.handler;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.unclecatmyself.bootstrap.channel.cache.WsCacheMap;
 import com.github.unclecatmyself.common.base.Handler;
@@ -12,17 +11,14 @@ import com.github.unclecatmyself.common.constant.HttpConstant;
 import com.github.unclecatmyself.common.constant.LogConstant;
 import com.github.unclecatmyself.common.constant.NotInChatConstant;
 import com.github.unclecatmyself.common.exception.NoFindHandlerException;
-import com.github.unclecatmyself.common.exception.NotFindLoginChannlException;
 import com.github.unclecatmyself.common.utils.HttpUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +28,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Create by UncleCatMySelf in 2018/12/06

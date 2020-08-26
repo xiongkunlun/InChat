@@ -1,6 +1,5 @@
 package com.github.unclecatmyself.bootstrap.verify;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
 import java.util.Set;

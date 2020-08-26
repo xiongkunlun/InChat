@@ -4,14 +4,9 @@ import com.github.unclecatmyself.common.utils.SpringContextUtils;
 import com.github.unclecatmyself.task.TextData;
 import com.github.unclecatmyself.users.pojo.Test;
 import com.github.unclecatmyself.users.repository.TestRepository;
-import org.apache.catalina.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.Map;
 
 /**

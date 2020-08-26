@@ -3,8 +3,6 @@ package com.github.unclecatmyself.bootstrap.channel.http;
 import com.github.unclecatmyself.common.bean.SendInChat;
 import com.github.unclecatmyself.common.bean.vo.SendServerVO;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.util.Map;
 

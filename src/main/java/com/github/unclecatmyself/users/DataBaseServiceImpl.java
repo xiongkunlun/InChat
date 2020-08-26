@@ -2,7 +2,6 @@ package com.github.unclecatmyself.users;
 
 import com.github.unclecatmyself.bootstrap.data.InChatToDataBaseService;
 import com.github.unclecatmyself.common.bean.InChatMessage;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 /**

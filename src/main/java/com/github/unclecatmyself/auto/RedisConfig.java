@@ -1,10 +1,5 @@
 package com.github.unclecatmyself.auto;
 
-import com.github.unclecatmyself.common.constant.LogConstant;
-import com.sun.org.apache.regexp.internal.RE;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * 关于redis一些基础东西
  * Create by UncleCatMySelf in 13:56 2019\1\5 0005
