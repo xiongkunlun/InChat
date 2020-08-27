@@ -186,11 +186,11 @@
     //格式化时间格式为 yyyy/MM/dd hh:mm:ss
     function formatTime(yyyyMMddHHmmss) {
         let year = yyyyMMddHHmmss.substring(0, 4);
-        let month = yyyyMMddHHmmss.substring(5, 6);
-        let day = yyyyMMddHHmmss.substring(7, 8);
-        let hour = yyyyMMddHHmmss.substring(9, 10);
-        let minu = yyyyMMddHHmmss.substring(11, 12);
-        let sec = yyyyMMddHHmmss.substring(13, 14);
+        let month = yyyyMMddHHmmss.substring(4, 6);
+        let day = yyyyMMddHHmmss.substring(6, 8);
+        let hour = yyyyMMddHHmmss.substring(8, 10);
+        let minu = yyyyMMddHHmmss.substring(10, 12);
+        let sec = yyyyMMddHHmmss.substring(12, 14);
         let time = year + "/" + month + "/" + day + " " + hour + ":" + minu + ":" + sec;
         return time;
     }
