@@ -20,7 +20,7 @@
     <div class="chatBox" ref="chatBox">
         <div class="chatBox-head">
             <div class="chatBox-head-one">
-                Conversations
+                陈萍萍
                 <div class="chat-close" style="margin: 10px 10px 0 0;font-size: 14px">关闭</div>
             </div>
             <div class="chatBox-head-two">
@@ -84,7 +84,7 @@
 </div>
 
 
-<script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+<script src="/js/jquery.min.js"></script>
 <script>
     var firstIntoNotifyDiv = true;
     var curRequestPath = window.document.location.href;
@@ -92,6 +92,7 @@
     var url = urlAndPath.substring(0, urlAndPath.indexOf(":"));
     var groupId = $("#groupId", window.parent.document).val();
     var userId = $("#userId", window.parent.document).val();
+
     window.CHAT = {
         socket: null,
         init: function () {
@@ -115,15 +116,14 @@
                     } else if (jsonObj.type == "sendGroup") {
 
                         // groupId#姓名#公司名#学校名#formatTime#value
-
                         var msg = jsonObj.value;
                         var msgs = msg.split("#");
                         if (jsonObj.from == userId) {
-                            apendPublicMsgMine(msgs[4], msgs[5]);
+                            appendPublicMsgMine(msgs[4], msgs[5]);
                             //发送后清空输入框
                             $(".div-textarea").html("");
                         } else {
-                            apendPublicMsgOther(msgs[1], msgs[4], msgs[5]);
+                            appendPublicMsgOther(msgs[1], msgs[4], msgs[5]);
                         }
                         //聊天框自动滑动到最下方
                         var box = document.getElementById('chatBox-content-demo');
@@ -132,7 +132,7 @@
                         //判断通知信息
                         if (jsonObj.notify) {
                             //拼接通知信息
-                            apendNotifycMsgOther(msgs[1], msgs[4], msgs[5]);
+                            appendNotifyMsgOther(msgs[1], msgs[4], msgs[5]);
                             var notifynum = $("#notify-num").text();
                             if (notifynum) {
                                 notifynum = parseInt(notifynum) + 1;
@@ -150,7 +150,7 @@
                         for (let i = notifys.length - 1; i >= 0; i = i - 1) {
                             let msg = notifys[i];
                             let msgs = msg.split("#");
-                            apendNotifycMsgOther(msgs[1], msgs[4], msgs[5]);
+                            appendNotifyMsgOther(msgs[1], msgs[4], msgs[5]);
                         }
                     }
                 }
@@ -159,12 +159,6 @@
             }
         },
 
-        //chat : function() {
-        //	if ($("#msg").val() != "")
-        //		var json = '{"type":"login","token":"1234","value":"'+$("#msg").val()+'"}';
-        //		CHAT.socket.send(json);
-        //},
-
         clean: function () {
             $("#content").html("")
         }
@@ -172,11 +166,12 @@
     CHAT.init();
 
     //公共聊天框拼接他人信息
-    function apendPublicMsgOther(name, time, msg) {
+    function appendPublicMsgOther(name, time, msg) {
+        let newTime = formatTime(time);
         $(".chatBox-content-demo").append("" +
             "<div class=\"clearfloat\">" +
             "   <div class=\"author-name\">" + name +
-            "       <small class=\"chat-date\">" + time + "</small> " +
+            "       <small class=\"chat-date\">" + newTime + "</small> " +
             "   </div> " +
             "   <div class=\"left\"> " +
             "       <div class=\"chat-avatars\">" +
@@ -188,12 +183,25 @@
 
     }
 
+    //格式化时间格式为 yyyy/MM/dd hh:mm:ss
+    function formatTime(yyyyMMddHHmmss) {
+        let year = yyyyMMddHHmmss.substring(0, 4);
+        let month = yyyyMMddHHmmss.substring(5, 6);
+        let day = yyyyMMddHHmmss.substring(7, 8);
+        let hour = yyyyMMddHHmmss.substring(9, 10);
+        let minu = yyyyMMddHHmmss.substring(11, 12);
+        let sec = yyyyMMddHHmmss.substring(13, 14);
+        let time = year + "/" + month + "/" + day + " " + hour + ":" + minu + ":" + sec;
+        return time;
+    }
+
     //公共聊天框拼接我的信息
-    function apendPublicMsgMine(time, msg) {
+    function appendPublicMsgMine(time, msg) {
+        let newTime = formatTime(time);
         $(".chatBox-content-demo").append("" +
             "<div class=\"clearfloat\">" +
             "   <div class=\"author-name\">" +
-            "       <small class=\"chat-date\">" + time + "</small> " +
+            "       <small class=\"chat-date\">" + newTime + "</small> " +
             "   </div> " +
             "   <div class=\"right\"> " +
             "       <div class=\"chat-message\"> " + msg + " </div> " +
@@ -206,11 +214,12 @@
     }
 
     //通知框拼接消息
-    function apendNotifycMsgOther(name, time, msg) {
+    function appendNotifyMsgOther(name, time, msg) {
+        let newTime = formatTime(time);
         $(".chatBox-content-demo-notify").append("" +
             "<div class=\"clearfloat\">" +
             "   <div class=\"author-name\">" + name +
-            "       <small class=\"chat-date\">" + time + "</small> " +
+            "       <small class=\"chat-date\">" + newTime + "</small> " +
             "   </div> " +
             "   <div class=\"left\"> " +
             "       <div class=\"chat-avatars\">" +
@@ -280,8 +289,8 @@
     $(".chat-list-people").each(function () {
         $(this).click(function () {
             var n = $(this).index();
-            $(".chatBox-head-one").toggle();
-            $(".chatBox-head-two").toggle();
+            $(".chatBox-head-one").fadeOut();
+            $(".chatBox-head-two").fadeIn();
             $(".chatBox-list").fadeOut();
             $(".chatBox-kuang").fadeIn();
 
@@ -303,11 +312,11 @@
     $(".chat-notify").each(function () {
         $(this).click(function () {
             var n = $(this).index();
-            $(".chatBox-head-one").toggle();
-            $(".chatBox-head-two").toggle();
+            $(".chatBox-head-one").fadeOut();
+            $(".chatBox-head-two").fadeIn();
             $(".chatBox-list").fadeOut();
             $(".chatBox-kuang").fadeOut();
-            $(".chatBox-kuang-notify").fadeIn(1);
+            $(".chatBox-kuang-notify").fadeIn();
             $(".notify-num").each(function () {
                 $(this).text("");
                 $(this).hide();
@@ -339,11 +348,11 @@
 
     //返回列表
     $(".chat-return").click(function () {
-        $(".chatBox-head-one").toggle(1);
-        $(".chatBox-head-two").toggle(1);
+        $(".chatBox-head-one").fadeIn(1);
+        $(".chatBox-head-two").fadeOut(1);
         $(".chatBox-list").fadeIn(1);
         $(".chatBox-kuang").fadeOut(1);
-        $(".chatBox-kuang-notify").fadeToggle(1);
+        $(".chatBox-kuang-notify").fadeOut(1);
     });
 
     //发送信息
