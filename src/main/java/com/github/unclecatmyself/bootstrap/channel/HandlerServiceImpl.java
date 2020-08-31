@@ -282,10 +282,11 @@ public class HandlerServiceImpl extends HandlerService {
             String groupId = userInfo.substring(0, userInfo.indexOf(Constans.BaseInfoSplitor));
             //保存用户 信息
             hashOperations.put(TableNameConstant.UBASE + ":" + groupId, userId + "", userInfo);
-            //channel 保存token
+            //channel中保存用户信息
+            Long userSize = hashOperations.size(TableNameConstant.UBASE + ":" + groupId);
             channel.attr(Constans.userIdAttr).set(userId);
             channel.attr(Constans.groupIdAttr).set(groupId);
-            channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginSuccess())));
+            channel.writeAndFlush(new TextWebSocketFrame(JSONObject.toJSONString(inChatBackMapService.loginSuccess(userSize))));
             websocketChannelService.loginWsSuccess(channel, userId);
             return true;
         }

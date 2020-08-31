@@ -11,9 +11,10 @@ public interface InChatBackMapService {
 
     /**
      * 登录成功返回信息
+     *
      * @return {@link Map} Json
      */
-    Map<String,String> loginSuccess();
+    Map<String, String> loginSuccess(Long userSize);
 
     /**
      * 登录失败返回信息

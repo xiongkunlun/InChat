@@ -58,4 +58,5 @@ public class Constans {
      *
      */
     public static String Notify = "notify";
+    public static String USERSIZE = "userSize";
 }

@@ -13,10 +13,11 @@ import java.util.Map;
 @Service
 public class InChatBackMapServiceImpl implements InChatBackMapService {
 
-    public Map<String, String> loginSuccess() {
-        Map<String,String> backMap = new HashMap<String,String>();
-        backMap.put(Constans.TYPE,Constans.LOGIN);
-        backMap.put(Constans.SUCCESS,Constans.TRUE);
+    public Map<String, String> loginSuccess(Long userSize) {
+        Map<String, String> backMap = new HashMap<String, String>();
+        backMap.put(Constans.TYPE, Constans.LOGIN);
+        backMap.put(Constans.SUCCESS, Constans.TRUE);
+        backMap.put(Constans.USERSIZE, userSize == null ? "0" : userSize.toString());
         return backMap;
     }
 

@@ -92,6 +92,7 @@
     var url = urlAndPath.substring(0, urlAndPath.indexOf(":"));
     var groupId = $("#groupId", window.parent.document).val();
     var userId = $("#userId", window.parent.document).val();
+    var userName = $("#userName", window.parent.document).val();
 
     window.CHAT = {
         socket: null,
@@ -102,7 +103,7 @@
                 CHAT.socket.onopen = function () {
                     console.log(userId);
                     //向netty注册自己的信息
-                    var json = '{"type":"login","userId":"' + userId + '","baseInfo":"' + groupId + '#王五#钢铁公司#川师大"}';
+                    var json = '{"type":"login","userId":"' + userId + '","baseInfo":"' + groupId + '#' + userName + '#钢铁公司#川师大"}';
                     CHAT.socket.send(json);
                 }, CHAT.socket.onclose = function () {
                     console.log("连接关闭");
@@ -114,7 +115,6 @@
                     if (jsonObj.type == "login") {
                         console.log("连接成功");
                     } else if (jsonObj.type == "sendGroup") {
-
                         // groupId#姓名#公司名#学校名#formatTime#value
                         var msg = jsonObj.value;
                         var msgs = msg.split("#");
@@ -180,7 +180,6 @@
             "       <div class=\"chat-message\"> " + msg + " </div> " +
             "   </div> " +
             "</div>");
-
     }
 
     //格式化时间格式为 yyyy/MM/dd hh:mm:ss
